@@ -1,0 +1,32 @@
+name: Simple CI Pipeline
+
+# Запускать при пуше или создании PR в ветку main
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest # Виртуальная машина, на которой запустится пайплайн
+    
+    steps:
+      # 1. Скачиваем код из репозитория
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Имитируем проверку кода (например, форматирование)
+      - name: Check code format
+        run: |
+          echo "Starting code validation..."
+          # Если это Terraform, можно раскомментировать: terraform fmt -check
+          echo "Validation successful!"
+
+      # 3. Имитируем сборку артефакта
+      - name: Build artifact
+        run: |
+          echo "Building application..."
+          mkdir -p ./build
+          echo "Hello from CI/CD pipeline!" > ./build/app.txt
+          echo "Build finished successfully."
