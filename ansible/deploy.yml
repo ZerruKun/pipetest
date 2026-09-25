@@ -1,0 +1,71 @@
+---
+- name: Deploy React App to Yandex Cloud VM
+  hosts: web_servers
+  become: yes  # Выполняем все задачи от имени root (sudo)
+
+  tasks:
+    # 1. Устанавливаем необходимые пакеты
+    - name: Install prerequisites for Docker
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        update_cache: yes
+
+    # 2. Устанавливаем Docker (скрипт не запустится, если docker уже есть, благодаря creates)
+    - name: Install Docker
+      shell: curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
+      args:
+        creates: /usr/bin/docker
+
+    # 3. Добавляем пользователя zalmo в группу docker (чтобы не нужен был sudo для docker-команд)
+    - name: Add zalmo user to docker group
+      user:
+        name: zalmo
+        groups: docker
+        append: yes
+
+    # 4. Создаём целевую папку на сервере
+    - name: Create application directory
+      file:
+        path: /home/zalmo/react-app
+        state: directory
+        owner: zalmo
+        group: zalmo
+        mode: '0755'
+
+    # 5. Копируем ТОЛЬКО Dockerfile (быстро и без мусора)
+    - name: Copy Dockerfile to VM
+      copy:
+        src: ../Dockerfile
+        dest: /home/zalmo/react-app/Dockerfile
+        owner: zalmo
+        group: zalmo
+
+    # 6. Копируем ТОЛЬКО папку с исходным кодом приложения
+    - name: Sync app source code to VM
+      synchronize:
+        src: ../app/
+        dest: /home/zalmo/react-app/app/
+        rsync_opts:
+          - "--exclude=node_modules/"
+          - "--exclude=.git/"
+          - "--exclude=dist/"
+          - "--exclude=.vite/"
+
+    # 7. Собираем образ прямо на сервере
+    - name: Build Docker image on VM
+      shell: docker build -t react-app:latest .
+      args:
+        chdir: /home/zalmo/react-app/
+
+    # 8. Удаляем старый контейнер, если он был запущен ранее
+    - name: Remove old container if exists
+      shell: docker rm -f my-react-app
+      ignore_errors: yes
+
+    # 9. Запускаем новый контейнер
+    - name: Run Docker container
+      shell: docker run -d --name my-react-app -p 8080:80 --restart always react-app:latest
