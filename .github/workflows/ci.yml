@@ -1,6 +1,5 @@
-name: Simple CI Pipeline
+name: Docker CI Pipeline
 
-# Запускать при пуше или создании PR в ветку main
 on:
   push:
     branches: [ "main", "master" ]
@@ -8,25 +7,24 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  build-and-check:
-    runs-on: ubuntu-latest # Виртуальная машина, на которой запустится пайплайн
+  build-docker:
+    runs-on: ubuntu-latest
     
     steps:
-      # 1. Скачиваем код из репозитория
+      # 1. Скачиваем код репозитория на раннер
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Имитируем проверку кода (например, форматирование)
-      - name: Check code format
-        run: |
-          echo "Starting code validation..."
-          # Если это Terraform, можно раскомментировать: terraform fmt -check
-          echo "Validation successful!"
+      # 2. Настраиваем Docker Buildx (современный стандарт сборки с кэшированием)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # 3. Имитируем сборку артефакта
-      - name: Build artifact
-        run: |
-          echo "Building application..."
-          mkdir -p ./build
-          echo "Hello from CI/CD pipeline!" > ./build/app.txt
-          echo "Build finished successfully."
+      # 3. Собираем Docker-образ
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .                # Контекст сборки - корень репозитория
+          file: ./Dockerfile        # Путь к нашему Dockerfile
+          push: false               # Пока только собираем и проверяем, не отправляем в реестр
+          tags: react-app:ci-test   # Тег для образа
+          load: true                # Загружаем образ в локальный Docker раннера для проверки
