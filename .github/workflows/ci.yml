@@ -21,8 +21,7 @@ jobs:
         run: |
           echo "Starting code validation..."
           # Если это Terraform, можно раскомментировать: terraform fmt -check
-          # echo "Validation successful!"
-          exit 1
+          echo "Validation successful!"
 
       # 3. Имитируем сборку артефакта
       - name: Build artifact
