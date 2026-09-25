@@ -1,0 +1,30 @@
+# Node.js и frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+.vite/
+
+# Секреты и переменные окружения
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# IDE и редакторы
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Операционные системы
+.DS_Store
+Thumbs.db
+
+# Terraform (на будущее)
+.terraform/
+*.tfstate
+*.tfstate.backup
